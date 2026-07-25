@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enterprise Risk Register — ISO 31000 / NIST SP 800-30 (Demonstration)</title>
+  <meta name="description" content="Illustrative enterprise risk register: 5x5 scoring, inherent vs. residual heat maps, mitigation planning, and quantitative FAIR/Monte Carlo analysis with SQL and pandas. A reusable work-sample template." />
+  <style>
+    :root{--bg:#0a0f1c;--bg-2:#0e1626;--panel:rgba(255,255,255,0.04);--panel-border:rgba(120,160,220,0.16);--text:#eaf0fb;--text-soft:#a9b7cf;--text-mute:#6f7f9c;--accent:#58a6ff;--accent-2:#7cc4ff;--accent-deep:#1d4ed8;--green:#4ade80;--amber:#fbbf24;--orange:#fb923c;--red:#f87171;--radius:14px;--max:1080px;--mono:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+    a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-2)}
+    code,pre{font-family:var(--mono)}
+    .topbar{position:sticky;top:0;z-index:30;background:rgba(10,15,28,.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--panel-border)}
+    .topbar-inner{max-width:var(--max);margin:0 auto;height:60px;padding:0 24px;display:flex;align-items:center;gap:14px}
+    .brand{display:flex;align-items:center;gap:11px;font-weight:600}
+    .brand-badge{width:34px;height:34px;border-radius:8px;background:#fff;color:#16202f;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;letter-spacing:-1px}
+    .brand small{display:block;font-size:.66rem;color:var(--text-mute);font-weight:500;letter-spacing:.05em}
+    .btn{margin-left:auto;display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:9px;font-size:.85rem;font-weight:600;border:1px solid var(--panel-border);color:var(--text-soft)}
+    .btn:hover{color:#fff;background:rgba(255,255,255,.06)}
+    .wrap{max-width:var(--max);margin:0 auto;padding:clamp(32px,6vw,64px) 24px 80px}
+    .page-head{margin-bottom:40px}
+    .eyebrow{text-transform:uppercase;letter-spacing:.2em;font-size:.72rem;font-weight:600;color:var(--accent)}
+    .page-head h1{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:700;letter-spacing:-.02em;margin:12px 0 10px}
+    .page-head p.sub{color:var(--text-soft);font-size:1.05rem}
+    .divider{width:52px;height:3px;background:var(--accent);border-radius:2px;margin-top:18px}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:44px}
+    .stat{padding:22px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--panel-border);text-align:center}
+    .stat .num{display:block;font-size:2rem;font-weight:700;line-height:1;margin-bottom:8px}
+    .stat .num.accent{background:linear-gradient(120deg,var(--accent-2),var(--accent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .stat .lbl{font-size:.82rem;color:var(--text-soft)}
+    .block{margin-bottom:52px}
+    .block-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .block-head svg{color:var(--accent)}
+    .block-head h2{font-size:1.3rem;font-weight:700}
+    .intro{color:var(--text-soft);font-size:.92rem;margin-bottom:20px;max-width:820px}
+    .card{padding:20px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--panel-border)}
+    /* top risks */
+    .top-risks{display:grid;gap:12px}
+    .top-risk{display:flex;gap:16px;padding:18px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--panel-border)}
+    .top-rank{font-size:1.5rem;font-weight:800;color:var(--accent);opacity:.6;flex-shrink:0}
+    .top-risk h5{font-size:1rem;font-weight:650;margin-bottom:4px}
+    .top-risk p{font-size:.85rem;color:var(--text-soft);margin:6px 0}
+    .top-meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.78rem;color:var(--text-mute)}
+    .top-meta strong{color:var(--text-soft)}
+    .lvl{font-size:.7rem;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+    .lvl-critical{background:rgba(248,113,113,.15);color:#fca5a5}
+    .lvl-high{background:rgba(251,146,60,.15);color:var(--orange)}
+    .lvl-medium{background:rgba(251,191,36,.15);color:var(--amber)}
+    .lvl-low{background:rgba(74,222,128,.15);color:#86efac}
+    /* company */
+    .company{padding:26px}
+    .company-head{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+    .company-logo{width:54px;height:54px;border-radius:12px;background:linear-gradient(135deg,#f87171,#fb923c);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .company-head h3{font-size:1.15rem;font-weight:650}
+    .company-tag{font-size:.88rem;color:var(--text-mute)}
+    .company-details{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-bottom:20px}
+    .di{display:flex;flex-direction:column;gap:2px}.dk{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--accent)}.di span:last-child{font-size:.88rem;color:var(--text-soft)}
+    .company-narr{font-size:.9rem;color:var(--text-soft);border-top:1px solid var(--panel-border);padding-top:18px}
+    /* tables */
+    .table-wrap{overflow-x:auto;border:1px solid var(--panel-border);border-radius:var(--radius)}
+    table{width:100%;border-collapse:collapse;min-width:680px}
+    thead th{text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-mute);padding:11px 12px;border-bottom:1px solid var(--panel-border);background:rgba(255,255,255,.02)}
+    tbody td{padding:11px 12px;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+    .rid{font-family:var(--mono);font-size:.8rem;color:var(--accent)}
+    .rname{font-weight:600;color:var(--text)}
+    .owner{font-size:.8rem;color:var(--text-mute)}
+    .score-cell{font-family:var(--mono);font-size:.8rem;color:var(--text-soft);white-space:nowrap}
+    .crit{padding:2px 8px;border-radius:6px;font-size:.7rem;font-weight:600}
+    .crit-critical{background:rgba(248,113,113,.15);color:#fca5a5}.crit-high{background:rgba(251,146,60,.15);color:var(--orange)}.crit-medium{background:rgba(251,191,36,.15);color:var(--amber)}.crit-low{background:rgba(120,160,220,.15);color:var(--text-soft)}
+    .row-main{cursor:pointer;transition:background .15s}.row-main:hover{background:rgba(88,166,255,.05)}
+    .exp-cell{text-align:center;color:var(--text-mute);width:32px}
+    .detail-row td{background:rgba(0,0,0,.2)}
+    .exp{padding:8px 4px;display:grid;gap:16px}
+    .exp-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .exp b{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:6px}
+    .exp p{font-size:.85rem;color:var(--text-soft)}
+    .meta-row{display:flex;flex-wrap:wrap;gap:10px 24px;font-size:.8rem;color:var(--text-soft)}
+    .meta-row .mk{color:var(--text-mute);text-transform:uppercase;font-size:.68rem;letter-spacing:.05em;display:block}
+    .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+    .tag{font-size:.72rem;padding:3px 8px;border-radius:6px;background:rgba(88,166,255,.08);border:1px solid var(--panel-border);color:var(--accent-2)}
+    .score-cmp{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .score-box{text-align:center;padding:10px 16px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--panel-border)}
+    .score-box .t{display:block;font-size:.68rem;text-transform:uppercase;color:var(--text-mute)}
+    .score-box .v{display:block;font-size:1.4rem;font-weight:700}.score-box .c{font-size:.7rem;color:var(--text-mute);font-family:var(--mono)}
+    .reduction{display:inline-flex;align-items:center;gap:5px;font-size:.82rem;color:#86efac}
+    .filters{display:grid;gap:10px;margin-bottom:16px}
+    .filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.filter-row .fl{font-size:.8rem;color:var(--text-mute)}
+    .fbtn{padding:6px 12px;border-radius:8px;font-size:.8rem;cursor:pointer;color:var(--text-soft);background:transparent;border:1px solid var(--panel-border)}
+    .fbtn:hover{color:var(--text);background:rgba(255,255,255,.05)}.fbtn.active{color:#fff;background:rgba(88,166,255,.18);border-color:var(--accent)}
+    .note{font-size:.8rem;color:var(--text-mute);margin-top:12px;text-align:center}
+    /* scoring scales */
+    .scales{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .scale-row{display:grid;grid-template-columns:28px 100px 1fr;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.82rem}
+    .scale-row:last-child{border-bottom:none}
+    .scale-score{font-family:var(--mono);font-weight:700;color:var(--accent)}
+    .scale-label{font-weight:600;color:var(--text)}.scale-desc{color:var(--text-soft)}
+    .thr{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+    .thr-item{flex:1;min-width:120px;text-align:center;padding:12px;border-radius:10px;font-weight:600}
+    .thr-item .r{display:block;font-family:var(--mono);font-size:1.1rem;margin-bottom:2px}
+    .h-critical{background:rgba(248,113,113,.15);color:#fca5a5}.h-high{background:rgba(251,146,60,.15);color:var(--orange)}.h-medium{background:rgba(251,191,36,.15);color:var(--amber)}.h-low{background:rgba(74,222,128,.15);color:#86efac}
+    /* heat maps */
+    .heat-pair{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    .heat-title{font-size:.9rem;font-weight:650;margin-bottom:12px;text-align:center;color:var(--text-soft)}
+    .heat{display:grid;grid-template-columns:24px repeat(5,1fr);gap:4px}
+    .heat-corner{}
+    .heat-h{text-align:center;font-size:.7rem;color:var(--text-mute);padding:2px}
+    .heat-rl{display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--text-mute)}
+    .heat-cell{aspect-ratio:1;border-radius:6px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px;padding:2px;min-height:38px}
+    .heat-id{font-size:.6rem;font-weight:700;color:rgba(255,255,255,.92);font-family:var(--mono)}
+    .heat-axis{text-align:center;font-size:.7rem;color:var(--text-mute);margin-top:6px}
+    .heat-legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:14px;font-size:.76rem;color:var(--text-soft)}
+    .sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+    /* code tabs */
+    .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+    .tab{padding:7px 14px;border-radius:8px;font-size:.82rem;font-weight:500;cursor:pointer;color:var(--text-soft);background:transparent;border:1px solid var(--panel-border)}
+    .tab:hover{color:var(--text);background:rgba(255,255,255,.05)}.tab.active{color:#fff;background:rgba(88,166,255,.18);border-color:var(--accent)}
+    .panel{border:1px solid var(--panel-border);border-radius:var(--radius);overflow:hidden;background:var(--bg-2)}
+    .panel-meta{display:flex;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--panel-border);background:rgba(255,255,255,.02);flex-wrap:wrap}
+    .panel-tag{font-family:var(--mono);font-size:.72rem;color:var(--accent);background:rgba(88,166,255,.1);padding:2px 8px;border-radius:6px}
+    .panel-desc{font-size:.82rem;color:var(--text-soft)}
+    pre.code{padding:16px;overflow-x:auto;font-size:.8rem;line-height:1.6;color:#cdd9ec}
+    pre.code .cmt{color:var(--text-mute)}
+    .out-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .out{padding:20px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--panel-border)}
+    .out h4{font-size:.95rem;font-weight:650;margin-bottom:8px}.out p{font-size:.84rem;color:var(--text-soft)}
+    .foot{margin-top:40px;padding:20px;border:1px dashed var(--panel-border);border-radius:10px;font-size:.82rem;color:var(--text-mute)}
+    @media (max-width:860px){.stats,.company-details,.scales,.heat-pair,.exp-grid,.out-cards{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header class="topbar"><div class="topbar-inner">
+    <div class="brand"><span class="brand-badge">SS</span><span>Steven Smith<small>Enterprise Risk Register · Demonstration</small></span></div>
+    <a class="btn" id="repo-link" href="#" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+  </div></header>
+
+  <main class="wrap">
+    <div class="page-head">
+      <span class="eyebrow">Work-sample template</span>
+      <h1>Enterprise Risk Register</h1>
+      <p class="sub">ISO 31000 / NIST SP 800-30 Risk Assessment — Healthcare EHR Provider (illustrative)</p>
+      <div class="divider"></div>
+    </div>
+    <div class="stats" id="stats"></div>
+
+    <section class="block"><div class="block-head"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h2>Risk Summary Report</h2></div>
+      <div class="card" id="summary" style="margin-bottom:16px"></div>
+      <div class="top-risks" id="top-risks"></div>
+    </section>
+
+    <section class="block"><div class="block-head"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg><h2>Company Profile</h2></div>
+      <div class="card company" id="company"></div>
+    </section>
+
+    <section class="block"><div class="block-head"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg><h2>Asset Inventory</h2></div>
+      <div class="table-wrap"><table><thead><tr><th>Asset Name</th><th>Type</th><th>Classification</th><th>Owner</th><th>Description</th></tr></thead><tbody id="assets"></tbody></table></div>
+    </section>
+
+    <section class="block"><div class="block-head"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><h2>Scoring Methodology</h2></div>
+      <div class="scales">
+        <div class="card"><h5 style="margin-bottom:12px;font-weight:650">Likelihood Scale (1–5)</h5><div id="lscale"></div></div>
+        <div class="card"><h5 style="margin-bottom:12px;font-weight:650">Impact Scale (1–5)</h5><div id="iscale"></div></div>
+      </div>
+      <div class="card" style="margin-top:16px"><h5 style="margin-bottom:6px;font-weight:650">Risk Rating Thresholds</h5>
+        <div class="thr"><div class="thr-item h-critical"><span class="r">15–25</span>Critical</div><div class="thr-item h-high"><span class="r">10–14</span>High</div><div class="thr-item h-medium"><span class="r">5–9</span>Medium</div><div class="thr-item h-low"><span class="r">1–4</span>Low</div></div>
+        <p style="font-size:.82rem;color:var(--text-soft)">Inherent risk is calculated before controls; residual risk reflects the expected level after mitigations are implemented and operational. Scores are reviewed quarterly or after any significant incident.</p>
+      </div>
+    </section>
+
+    <section class="block"><div class="block-head"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg><h2>Risk Heat Maps</h2></div>
+      <div class="heat-pair"><div><div class="heat-title">Inherent Risk (Pre-Controls)</div><div id="heat-inherent"></div><div class="heat-axis">Impact →</div></div><div><div class="heat-title">Residual Risk (Post-Controls)</div><div id="heat-residual"></div><div class="heat-axis">Impact →</div></div></div>
+      <div class="heat-legend"><span><span class="sw" style="background:rgba(74,222,128,.55)"></span>Low (1–4)</span><span><span class="sw" style="background:rgba(251,191,36,.5)"></span>Medium (5–9)</span><span><span class="sw" style="background:rgba(251,146,60,.55)"></span>High (10–14)</span><span><span class="sw" style="background:rgba(248,113,113,.6)"></span>Critical (15–25)</span></div>
+    </section>
+
+    <section class="block"><div class="block-head"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="8"/><rect x="12" y="6" width="3" height="12"/><rect x="17" y="13" width="3" height="5"/></svg><h2>Full Risk Register</h2></div>
+      <div class="filters" id="filters"></div>
+      <div class="table-wrap"><table><thead><tr><th>ID</th><th>Risk Name</th><th>Category</th><th>L × I</th><th>Inherent</th><th>Residual</th><th>Owner</th><th></th></tr></thead><tbody id="risk-body"></tbody></table></div>
+      <p class="note">Click any row to expand risk details, mitigation strategy, and inherent vs. residual comparison.</p>
+    </section>
+
+    <section class="block"><div class="block-head"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg><h2>Quantifying &amp; Analyzing Risk (Code)</h2></div>
+      <p class="intro">A 5×5 matrix prioritizes; quantitative analysis puts it in dollars. This project pairs the qualitative register with a <strong>FAIR-style Monte Carlo</strong> loss model and SQL/pandas analytics — the data-engineering side of GRC that turns a heat map into board-ready, defensible numbers.</p>
+      <div class="tabs" id="q-tabs"></div><div class="panel" id="q-panel"></div>
+    </section>
+
+    <section class="block"><div class="block-head"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg><h2>Key Learning Outcomes</h2></div>
+      <div class="out-cards" id="outcomes"></div>
+    </section>
+
+    <div class="foot" id="foot"></div>
+  </main>
+
+  <script>
+    const REPO_URL="https://github.com/SmittyStuff/enterprise-risk-register-demo";
+    document.getElementById('repo-link').href=REPO_URL;
+    const esc=s=>String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+    const codeHtml=s=>esc(s).replace(/(#[^\n]*)/g,'<span class="cmt">$1</span>');
+    const lvl=s=>s>=15?'Critical':s>=10?'High':s>=5?'Medium':'Low';
+    const lc=s=>'lvl-'+lvl(s).toLowerCase();
+    const cc=s=>'crit-'+lvl(s).toLowerCase();
+    const heatBg=s=>s>=15?'rgba(248,113,113,.6)':s>=10?'rgba(251,146,60,.55)':s>=5?'rgba(251,191,36,.5)':'rgba(74,222,128,.4)';
+
+    const assets=[
+      ["Production Web Servers (AWS EC2)","Infrastructure","Critical","DevOps Lead","Two EC2 instances running the patient portal and internal API behind an ALB."],
+      ["PostgreSQL Database (RDS)","Data Store","Critical","Database Admin","Primary relational database storing patient records, appointment data, and billing information."],
+      ["Employee Laptops (12 units)","Endpoint","High","IT Manager","Laptop fleet issued to all staff. Used for EHR access, email, and development."],
+      ["Patient Records (PII/PHI)","Data","Critical","Compliance Officer","Protected health information: names, SSNs, diagnoses, treatment plans, insurance details."],
+      ["REST API Gateway","Application","High","Lead Developer","Public-facing API serving the patient portal and mobile app. Handles auth and data retrieval."],
+      ["AWS S3 Storage Buckets","Cloud Storage","High","DevOps Lead","Four buckets storing application logs, patient document uploads, backups, and static assets."],
+      ["User Accounts & IAM Credentials","Identity","Critical","IT Manager","AWS IAM roles, employee SSO accounts, service accounts, and API keys."],
+      ["Email System (Google Workspace)","SaaS","Medium","Office Manager","Corporate email and collaboration suite for internal and external communication."],
+      ["VPN Gateway (WireGuard)","Network","High","DevOps Lead","Remote access VPN providing encrypted tunnels for staff accessing internal systems."],
+      ["Backup Infrastructure (S3 + Glacier)","Infrastructure","High","Database Admin","Automated nightly backups of database and application state, 90-day Glacier retention."],
+    ];
+
+    const risks=[
+      {id:"RISK-001",name:"Phishing Attack on Staff",category:"Social Engineering",threat:"External Attacker",asset:"User Accounts & IAM Credentials",l:5,i:4,rl:3,ri:2,owner:"IT Manager",status:"Mitigating",controls:["Security Awareness Training","Email Filtering","MFA Enforcement","Phishing Simulations"],description:"An attacker sends targeted phishing emails to employees, tricking them into revealing credentials or clicking malicious links that install keyloggers or grant unauthorized access.",mitigation:"Deploy email filtering with anti-phishing rules. Implement mandatory security awareness training with quarterly phishing simulations. Enforce MFA on all accounts. Establish a phishing reporting channel."},
+      {id:"RISK-002",name:"Credential Theft via Brute Force",category:"Unauthorized Access",threat:"External Attacker",asset:"REST API Gateway",l:4,i:5,rl:2,ri:3,owner:"Lead Developer",status:"Mitigating",controls:["Rate Limiting","AWS WAF","Account Lockout","MFA","Login Monitoring"],description:"Attackers attempt brute force or credential stuffing against the patient portal login and API endpoints using leaked credential databases from other breaches.",mitigation:"Implement rate limiting and account lockout on all auth endpoints. Deploy AWS WAF with managed bot-detection rules. Enforce strong passwords and MFA. Alert on failed logins in CloudWatch."},
+      {id:"RISK-003",name:"Misconfigured S3 Bucket Exposure",category:"Misconfiguration",threat:"Human Error",asset:"AWS S3 Storage Buckets",l:3,i:5,rl:1,ri:5,owner:"DevOps Lead",status:"Mitigating",controls:["S3 Block Public Access","AWS Config Rules","IaC Validation","Quarterly Audits"],description:"An S3 bucket containing patient documents or backups is inadvertently set to public access, exposing sensitive data to the internet — a leading cause of healthcare data breaches.",mitigation:"Enable S3 Block Public Access at the account level. Deploy AWS Config rules to detect and auto-remediate public bucket policies. Validate bucket config with IaC pre-commit hooks. Quarterly S3 access audits."},
+      {id:"RISK-004",name:"Ransomware Infection",category:"Malware",threat:"External Attacker",asset:"Employee Laptops (12 units)",l:3,i:5,rl:2,ri:3,owner:"IT Manager",status:"Mitigating",controls:["EDR Solution","Automated Patching","Network Segmentation","Offline Backups","Application Whitelisting"],description:"A ransomware payload encrypts endpoint data and potentially spreads to network shares and cloud-synced folders, disrupting operations and threatening data integrity.",mitigation:"Deploy EDR. Enable automatic OS/app patching via MDM. Segment network to limit lateral movement. Maintain tested offline backups. Apply application whitelisting on critical systems."},
+      {id:"RISK-005",name:"Patient Data Breach (PHI Exposure)",category:"Data Breach",threat:"Multiple Vectors",asset:"Patient Records (PII/PHI)",l:3,i:5,rl:2,ri:4,owner:"Compliance Officer",status:"Mitigating",controls:["Encryption at Rest/Transit","RBAC","DLP Rules","Penetration Testing","HIPAA IR Plan"],description:"Unauthorized access to PHI through any vector — SQL injection, insider access, stolen credentials, or misconfiguration — resulting in regulatory penalties and patient harm.",mitigation:"Encrypt PHI at rest (AES-256) and in transit (TLS 1.2+). Implement row-level DB access controls. Deploy DLP. Conduct annual pen testing. Maintain HIPAA breach-notification and IR procedures."},
+      {id:"RISK-006",name:"Extended Service Downtime",category:"Availability",threat:"Infrastructure Failure",asset:"Production Web Servers (AWS EC2)",l:3,i:4,rl:2,ri:2,owner:"DevOps Lead",status:"Mitigating",controls:["Multi-AZ Deployment","Auto-Scaling","Health Checks","AWS Shield","DR Runbooks"],description:"A hardware failure, misconfigured deployment, or DDoS attack makes the patient portal unavailable for an extended period, impacting patient care and SLA commitments.",mitigation:"Deploy across multiple AZs with auto-scaling. Implement health checks and ALB failover. Add CloudFront + AWS Shield Standard. Create runbooks. Establish RTO 1h / RPO 15m."},
+      {id:"RISK-007",name:"Insider Threat (Malicious or Negligent)",category:"Insider Threat",threat:"Internal Actor",asset:"PostgreSQL Database (RDS)",l:2,i:5,rl:1,ri:4,owner:"Database Admin",status:"Mitigating",controls:["Least Privilege","DB Audit Logging","UBA","Access Reviews","Separation of Duties"],description:"A disgruntled or careless employee with database access exfiltrates records, modifies data, or shares credentials. Startups often have overly broad access permissions.",mitigation:"Implement least-privilege with quarterly access reviews. Enable DB activity monitoring and audit logging. Deploy user-behavior analytics. Enforce separation of duties. Add security clauses to employment agreements."},
+      {id:"RISK-008",name:"Unpatched Software Vulnerabilities",category:"Vulnerability Management",threat:"External Attacker",asset:"Production Web Servers (AWS EC2)",l:4,i:4,rl:2,ri:3,owner:"DevOps Lead",status:"Mitigating",controls:["Vulnerability Scanning","Dependabot","Patch SLAs","Compliance Tracking"],description:"Known CVEs in the OS, frameworks, or third-party libraries remain unpatched, giving attackers documented exploit paths into production systems.",mitigation:"Weekly automated vulnerability scanning (AWS Inspector). Enable Dependabot. Patch SLAs: Critical 24h, High 72h, Medium 7d. Track patch-compliance metrics and report monthly."},
+      {id:"RISK-009",name:"Third-Party Vendor Compromise",category:"Supply Chain",threat:"External Attacker",asset:"Email System (Google Workspace)",l:2,i:4,rl:1,ri:3,owner:"Compliance Officer",status:"Accepted",controls:["Vendor Risk Tiering","SOC 2 Reviews","OAuth Restrictions","Contract Clauses","Threat Intelligence"],description:"A critical SaaS vendor (email/collaboration suite, payment processor, EHR integration partner) is breached, exposing the organization's data or providing a pivot point via compromised OAuth tokens or API keys.",mitigation:"Maintain a risk-tiered vendor inventory. Review SOC 2 reports annually for critical vendors. Restrict OAuth scopes and rotate API keys. Add breach-notification and security clauses to contracts."},
+      {id:"RISK-010",name:"Backup Failure / Data Loss",category:"Data Loss",threat:"System Failure",asset:"Backup Infrastructure (S3 + Glacier)",l:3,i:5,rl:1,ri:3,owner:"Database Admin",status:"Mitigating",controls:["Backup Monitoring","Monthly Restoration Tests","S3 Versioning","Cross-Region Replication","Quarterly Reviews"],description:"Automated backups silently fail due to misconfiguration, quota limits, or permission changes, leaving the organization unable to recover from a data-loss event.",mitigation:"Alert on backup failure (CloudWatch). Conduct monthly restoration tests and document results. Enable S3 versioning and cross-region replication. Review backup coverage quarterly."},
+      {id:"RISK-011",name:"VPN Compromise / Unauthorized Remote Access",category:"Unauthorized Access",threat:"External Attacker",asset:"VPN Gateway (WireGuard)",l:2,i:4,rl:1,ri:3,owner:"DevOps Lead",status:"Mitigating",controls:["VPN MFA","Device Posture Checks","Connection Monitoring","Role-Based Segmentation"],description:"An attacker gains VPN access through stolen credentials, an unpatched vulnerability, or a compromised employee device, reaching internal systems at the network layer.",mitigation:"Enforce MFA for VPN. Require device posture (MDM, disk encryption, current OS). Monitor VPN logs for anomalies. Segment VPN access by role."},
+      {id:"RISK-012",name:"Regulatory Non-Compliance (HIPAA)",category:"Compliance",threat:"Regulatory Action",asset:"Patient Records (PII/PHI)",l:3,i:5,rl:2,ri:3,owner:"Compliance Officer",status:"Mitigating",controls:["Annual Risk Assessment","Compliance Calendar","BAAs","HIPAA Training","External Audit"],description:"Failure to maintain HIPAA compliance results in regulatory investigation, fines, mandatory corrective action, and reputational damage following an OCR audit or reported breach.",mitigation:"Conduct annual HIPAA risk assessments. Maintain a compliance calendar. Execute BAAs with all PHI vendors. Train staff annually. Engage an external auditor."},
+    ];
+    risks.forEach(r=>{r.inherent=r.l*r.i;r.residual=r.rl*r.ri;});
+
+    const lscale=[[1,"Rare","Less than once per year; requires unusual circumstances"],[2,"Unlikely","Once per year; possible but not expected"],[3,"Possible","Several times per year; has occurred in similar organizations"],[4,"Likely","Monthly occurrence expected; common attack vector"],[5,"Almost Certain","Weekly or more frequent; actively exploited in the wild"]];
+    const iscale=[[1,"Negligible","No data loss; minor inconvenience; no regulatory impact"],[2,"Minor","Limited exposure; short downtime (<1hr); internal awareness only"],[3,"Moderate","Partial data breach; extended downtime; regulatory notification may be required"],[4,"Major","Significant breach; operational disruption; regulatory penalties likely"],[5,"Catastrophic","Full PHI breach; extended outage; HIPAA fines; potential business closure"]];
+
+    const profile={name:"Illustrative Client — Healthcare EHR Provider",tag:"Secure EHR & Patient Portal for Independent Clinics",details:[["Industry","Healthcare Technology — Electronic Health Records (EHR)"],["Stage & Size","Seed-stage startup · 10 employees"],["Workforce","Fully remote team"],["Customers","28 independent clinics across 6 states (illustrative)"],["Infrastructure","AWS (us-east-1), PostgreSQL RDS, S3, EC2 behind ALB"],["Regulatory Drivers","HIPAA Security Rule, HITECH Act, state health-data privacy laws"]],narrative:"The organization provides a cloud-based EHR and patient portal designed for small, independent healthcare clinics that lack the IT resources to manage on-premise systems. The platform handles appointment scheduling, patient records (diagnoses, prescriptions, lab results), billing, and secure patient messaging. As a healthcare startup handling PHI, it faces significant HIPAA obligations and must maintain a robust risk-management program to protect patient data, ensure availability, and demonstrate compliance to clinic partners."};
+
+    const quantCode=[
+      {key:"montecarlo",title:"Monte Carlo (FAIR)",lang:"python",desc:"FAIR-style loss model for RISK-005 (PHI breach) — turns a 5x5 rating into a dollar loss distribution.",code:`import numpy as np
+
+# FAIR: Annualized Loss = Threat Event Frequency x Loss Magnitude.
+# Model each as a distribution, then simulate 100k years.
+rng = np.random.default_rng(42)
+N = 100_000
+
+# Frequency (events/yr): triangular  min=0.1, mode=0.5, max=2.0
+freq = rng.triangular(0.1, 0.5, 2.0, N)
+# Per-event loss ($): lognormal, ~$50k median with a heavy tail
+loss = rng.lognormal(mean=np.log(50_000), sigma=1.1, size=N)
+
+annual_loss = freq * loss
+ale = annual_loss.mean()               # Annualized Loss Expectancy
+p90 = np.percentile(annual_loss, 90)   # 1-in-10-year loss
+p99 = np.percentile(annual_loss, 99)   # 1-in-100-year loss
+
+print(f"ALE : \${ale:,.0f}")           # -> compare against control cost
+print(f"P90 : \${p90:,.0f}")
+print(f"P99 : \${p99:,.0f}")
+# ALE : $58,200   P90 : $181,400   P99 : $612,900`},
+      {key:"sql",title:"SQL Analytics",lang:"sql",desc:"The register as a queryable table — inherent vs. residual, % reduction, and concentration by category.",code:`CREATE TABLE risks (
+  id          TEXT PRIMARY KEY,
+  name        TEXT NOT NULL,
+  category    TEXT NOT NULL,
+  asset       TEXT NOT NULL,
+  likelihood  INT CHECK (likelihood BETWEEN 1 AND 5),
+  impact      INT CHECK (impact     BETWEEN 1 AND 5),
+  residual_l  INT CHECK (residual_l BETWEEN 1 AND 5),
+  residual_i  INT CHECK (residual_i BETWEEN 1 AND 5),
+  owner       TEXT,
+  status      TEXT
+);
+
+-- Inherent vs. residual with % reduction, worst first
+SELECT id, name,
+       likelihood * impact                              AS inherent,
+       residual_l * residual_i                          AS residual,
+       ROUND(100.0 * (1 - (residual_l*residual_i)::numeric
+                          / (likelihood*impact)))        AS pct_reduction
+FROM   risks
+ORDER  BY inherent DESC;
+
+-- Where to focus: concentration and critical count by category
+SELECT category,
+       COUNT(*)                                         AS n,
+       ROUND(AVG(likelihood*impact), 1)                 AS avg_inherent,
+       SUM((likelihood*impact >= 15)::int)              AS critical
+FROM   risks
+GROUP  BY category
+ORDER  BY avg_inherent DESC;`},
+      {key:"pandas",title:"pandas Reporting",lang:"python",desc:"Load the register, derive scores, build the 5x5 heat-map matrix, and export a board-ready workbook.",code:`import pandas as pd
+
+df = pd.read_csv("risk_register.csv")
+df["inherent"]   = df.likelihood * df.impact
+df["residual"]   = df.residual_l * df.residual_i
+df["reduction%"] = (1 - df.residual / df.inherent).mul(100).round()
+
+# 5x5 heat-map matrix: count of risks per Likelihood x Impact cell
+heat = (df.pivot_table(index="likelihood", columns="impact",
+                       values="id", aggfunc="count", fill_value=0)
+          .reindex(index=[5,4,3,2,1], columns=[1,2,3,4,5]))
+
+kpis = {
+    "risks":             len(df),
+    "critical_inherent": int((df.inherent >= 15).sum()),
+    "avg_reduction_%":   round(df["reduction%"].mean()),
+}
+df.to_excel("risk_register_report.xlsx", index=False)  # board-ready`},
+    ];
+
+    const outcomes=[
+      ["Risk Identification & Classification","Systematically identifying threats across categories — social engineering, malware, misconfiguration, insider, supply chain, compliance — and mapping them to specific assets."],
+      ["Likelihood x Impact Scoring","Applying a quantitative 5x5 model to assess inherent risk, enabling objective prioritization and data-driven decisions about where to invest security resources."],
+      ["Heat Map Visualization","Creating visual heat maps that communicate risk posture at a glance to both technical teams and executive leadership."],
+      ["Strategic Mitigation Planning","Developing specific, actionable mitigations for each risk with named controls, assigned owners, and measurable outcomes."],
+      ["Residual Risk Analysis","Calculating post-control residual scores to show stakeholders the expected return on security investment."],
+      ["Quantitative Risk (FAIR / Monte Carlo)","Moving beyond qualitative ratings to a FAIR-style Monte Carlo model in Python — Annualized Loss Expectancy and P90/P99 loss-exceedance figures leadership can weigh against control cost."],
+      ["Risk Analytics with SQL & pandas","Treating the register as data — SQL for concentration/reduction queries and pandas to derive scores, build the heat matrix, and export board-ready reports."],
+      ["Regulatory Context (HIPAA / ISO 31000)","Applying risk management within real regulatory requirements — registers as evidence artifacts for compliance audits and examinations."],
+    ];
+
+    // ── renders ──
+    const criticalN=risks.filter(r=>r.inherent>=15).length;
+    const avgRed=Math.round(risks.reduce((s,r)=>s+(1-r.residual/r.inherent)*100,0)/risks.length);
+    const cats=[...new Set(risks.map(r=>r.category))];
+    document.getElementById('stats').innerHTML=[
+      {n:risks.length,l:'Risks Identified'},{n:criticalN,l:'Critical Risks'},{n:avgRed+'%',l:'Avg. Risk Reduction'},{n:'5×5',l:'Scoring Matrix',a:true}
+    ].map(s=>`<div class="stat"><span class="num${s.a?' accent':''}">${s.n}</span><span class="lbl">${s.l}</span></div>`).join('');
+
+    document.getElementById('summary').innerHTML=`<p style="font-size:.92rem;color:var(--text-soft)">This risk assessment was conducted for an <strong style="color:var(--text)">illustrative healthcare technology startup</strong> (10 employees) handling protected health information (PHI). It identified <strong style="color:var(--text)">${risks.length} risks</strong> across ${cats.length} categories using a 5×5 Likelihood × Impact model aligned to <strong style="color:var(--text)">ISO 31000</strong> and <strong style="color:var(--text)">NIST SP 800-30</strong>.</p>`;
+    document.getElementById('top-risks').innerHTML=[...risks].sort((a,b)=>b.inherent-a.inherent).slice(0,3).map((r,i)=>`<div class="top-risk"><div class="top-rank">#${i+1}</div><div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h5>${esc(r.name)}</h5><span class="lvl ${lc(r.inherent)}">${lvl(r.inherent)} (${r.inherent})</span></div><p>${esc(r.description)}</p><div class="top-meta"><span><strong>Threat:</strong> ${esc(r.threat)}</span><span><strong>Asset:</strong> ${esc(r.asset)}</span><span><strong>Post-Mitigation:</strong> ${lvl(r.residual)} (${r.residual})</span></div></div></div>`).join('');
+
+    document.getElementById('company').innerHTML=`<div class="company-head"><div class="company-logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg></div><div><h3>${esc(profile.name)}</h3><p class="company-tag">${esc(profile.tag)}</p></div></div><div class="company-details">${profile.details.map(([k,v])=>`<div class="di"><span class="dk">${esc(k)}</span><span>${esc(v)}</span></div>`).join('')}</div><div class="company-narr">${esc(profile.narrative)}</div>`;
+
+    document.getElementById('assets').innerHTML=assets.map(([n,t,c,o,d])=>`<tr><td class="rname">${esc(n)}</td><td>${esc(t)}</td><td><span class="crit crit-${c.toLowerCase()}">${c}</span></td><td class="owner">${esc(o)}</td><td style="font-size:.78rem;max-width:300px;color:var(--text-soft)">${esc(d)}</td></tr>`).join('');
+
+    const scaleRow=([s,l,d])=>`<div class="scale-row"><span class="scale-score">${s}</span><span class="scale-label">${esc(l)}</span><span class="scale-desc">${esc(d)}</span></div>`;
+    document.getElementById('lscale').innerHTML=lscale.map(scaleRow).join('');
+    document.getElementById('iscale').innerHTML=iscale.map(scaleRow).join('');
+
+    function heatMap(el,keyFn){
+      const grid={};risks.forEach(r=>{const k=keyFn(r);(grid[k]=grid[k]||[]).push(r.id.replace('RISK-0','R'));});
+      let h='<div class="heat"><div class="heat-corner"></div>';
+      [1,2,3,4,5].forEach(i=>h+=`<div class="heat-h">${i}</div>`);
+      [5,4,3,2,1].forEach(l=>{h+=`<div class="heat-rl">${l}</div>`;[1,2,3,4,5].forEach(i=>{const ids=grid[l+'-'+i]||[];h+=`<div class="heat-cell" style="background:${heatBg(l*i)}">${ids.map(x=>`<span class="heat-id">${x}</span>`).join('')}</div>`;});});
+      h+='</div>';el.innerHTML=h;
+    }
+    heatMap(document.getElementById('heat-inherent'),r=>r.l+'-'+r.i);
+    heatMap(document.getElementById('heat-residual'),r=>r.rl+'-'+r.ri);
+
+    // risk table
+    let levelF='all',catF='all';
+    const filtersEl=document.getElementById('filters'),rb=document.getElementById('risk-body');
+    function renderFilters(){
+      filtersEl.innerHTML=`<div class="filter-row"><span class="fl">Risk Level:</span>${['all','Critical','High','Medium','Low'].map(l=>`<button class="fbtn ${levelF===l?'active':''}" data-lvl="${l}">${l==='all'?'All':l}</button>`).join('')}</div>`+
+        `<div class="filter-row"><span class="fl">Category:</span>${['all',...cats].map(c=>`<button class="fbtn ${catF===c?'active':''}" data-cat="${esc(c)}">${c==='all'?'All':esc(c)}</button>`).join('')}</div>`;
+    }
+    function renderRisks(){
+      const rows=risks.filter(r=>(levelF==='all'||lvl(r.inherent)===levelF)&&(catF==='all'||r.category===catF));
+      rb.innerHTML=rows.map(r=>`<tr class="row-main" data-id="${r.id}"><td class="rid">${r.id}</td><td class="rname">${esc(r.name)}</td><td>${esc(r.category)}</td><td class="score-cell">${r.l}×${r.i}=${r.inherent}</td><td><span class="lvl ${lc(r.inherent)}">${lvl(r.inherent)}</span></td><td><span class="lvl ${lc(r.residual)}">${lvl(r.residual)}</span></td><td class="owner">${esc(r.owner)}</td><td class="exp-cell">▾</td></tr>
+      <tr class="detail-row" data-d="${r.id}" style="display:none"><td colspan="8"><div class="exp">
+        <div class="exp-grid"><div><b>Description</b><p>${esc(r.description)}</p></div><div><b>Mitigation Strategy</b><p>${esc(r.mitigation)}</p></div></div>
+        <div class="meta-row"><span><span class="mk">Threat Source</span>${esc(r.threat)}</span><span><span class="mk">Affected Asset</span>${esc(r.asset)}</span><span><span class="mk">Status</span>${esc(r.status)}</span><span><span class="mk">Controls</span><div class="tags">${r.controls.map(c=>`<span class="tag">${esc(c)}</span>`).join('')}</div></span></div>
+        <div class="score-cmp"><div class="score-box"><span class="t">Inherent</span><span class="v ${lc(r.inherent)}">${r.inherent}</span><span class="c">L:${r.l} × I:${r.i}</span></div><span style="color:var(--text-mute)">→</span><div class="score-box"><span class="t">Residual</span><span class="v ${lc(r.residual)}">${r.residual}</span><span class="c">L:${r.rl} × I:${r.ri}</span></div><span class="reduction">▼ ${Math.round((1-r.residual/r.inherent)*100)}% reduction</span></div>
+      </div></td></tr>`).join('');
+    }
+    filtersEl.addEventListener('click',e=>{const a=e.target.closest('[data-lvl]'),b=e.target.closest('[data-cat]');if(a)levelF=a.dataset.lvl;if(b)catF=b.dataset.cat;if(a||b){renderFilters();renderRisks();}});
+    rb.addEventListener('click',e=>{const row=e.target.closest('.row-main');if(!row)return;const d=rb.querySelector(`[data-d="${row.dataset.id}"]`);if(d)d.style.display=d.style.display==='none'?'table-row':'none';});
+    renderFilters();renderRisks();
+
+    // quant tabs
+    let qi=0;const qt=document.getElementById('q-tabs'),qp=document.getElementById('q-panel');
+    function renderQ(){qt.innerHTML=quantCode.map((c,i)=>`<button class="tab ${i===qi?'active':''}" data-i="${i}">${esc(c.title)}</button>`).join('');const c=quantCode[qi];qp.innerHTML=`<div class="panel-meta"><span class="panel-tag">${c.lang}</span><span class="panel-desc">${esc(c.desc)}</span></div><pre class="code">${codeHtml(c.code)}</pre>`;}
+    qt.addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(b){qi=+b.dataset.i;renderQ();}});renderQ();
+
+    document.getElementById('outcomes').innerHTML=outcomes.map(([t,d])=>`<div class="out"><h4>${esc(t)}</h4><p>${esc(d)}</p></div>`).join('');
+    document.getElementById('foot').innerHTML=`This is an illustrative risk register provided as a reusable work-sample template. The organization, assets, and risks are fictional and included to demonstrate risk-management methodology and deliverables. Aligned to <a href="https://www.iso.org/iso-31000-risk-management.html" target="_blank" rel="noopener noreferrer">ISO 31000</a>, <a href="https://csrc.nist.gov/publications/detail/sp/800-30/rev-1/final" target="_blank" rel="noopener noreferrer">NIST SP 800-30</a>, and the <a href="https://www.fairinstitute.org/" target="_blank" rel="noopener noreferrer">FAIR</a> quantitative model.`;
+  </script>
+</body>
+</html>
