@@ -16,7 +16,7 @@ Aligned to **ISO 31000**, **NIST SP 800-30**, and the **FAIR** quantitative mode
 
 ## 🔗 Live demo
 
-**https://smittystuff.github.io/enterprise-risk-register-demo/**
+**https://itnet-steven-smith.github.io/enterprise-risk-register-demo/**
 
 ## About
 
